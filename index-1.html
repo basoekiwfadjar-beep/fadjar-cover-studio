@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>Fadjar Cover Studio</title>
+<style>
+:root{--bg:#0b1020;--panel:#151d32;--text:#f5f7fb;--muted:#aeb8cc;--gold:#f4c76b}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#0b1020,#17233d);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:26px 18px 18px;text-align:center}header h1{margin:0;font-size:clamp(26px,6vw,40px)}header p{color:var(--muted);margin:8px auto 0;max-width:600px}
+main{display:grid;grid-template-columns:1fr;gap:18px;max-width:1000px;margin:auto;padding:0 14px 32px}.panel{background:rgba(21,29,50,.96);border:1px solid #34405b;border-radius:18px;padding:18px;box-shadow:0 12px 30px #0002}
+label{display:block;font-weight:650;margin:12px 0 6px}input,textarea,select{width:100%;border:1px solid #46536e;border-radius:10px;background:#0e1628;color:#fff;padding:12px;font:inherit}textarea{min-height:90px;resize:vertical}.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}button{border:0;border-radius:11px;padding:12px 16px;font:inherit;font-weight:750;cursor:pointer;background:var(--gold);color:#172033}button.secondary{background:#303d59;color:white}.preview-wrap{display:flex;justify-content:center;padding:8px}canvas{width:min(100%,360px);height:auto;border-radius:5px;box-shadow:0 15px 38px #0008;background:#111}.note{color:var(--muted);font-size:13px;line-height:1.5}.status{color:#b8f3cf;min-height:20px;font-size:14px;margin-top:10px}
+@media(min-width:760px){main{grid-template-columns:1fr 1fr;padding:0 20px 40px}.panel{padding:22px}}
+</style>
+</head>
+<body>
+<header><h1>Fadjar Cover Studio</h1><p>Studio sederhana untuk merancang dan mengunduh cover novel langsung dari Chrome — tanpa login dan tanpa biaya.</p></header>
+<main>
+<section class="panel">
+<h2>Rancang cover novel</h2>
+<label for="title">Judul novel</label><input id="title" maxlength="70" value="Tuhan yang Humoris" placeholder="Masukkan judul novel">
+<label for="author">Nama penulis</label><input id="author" maxlength="50" value="W Fadjar basoeki" placeholder="Nama penulis">
+<label for="genre">Genre</label><select id="genre"><option>Fantasi</option><option>Horor</option><option>Romance</option><option>Drama</option><option>Komedi</option><option>Religi</option><option>Aksi</option><option>Misteri</option></select>
+<label for="tagline">Kalimat pendek (opsional)</label><textarea id="tagline" maxlength="150" placeholder="Contoh: Sebuah kisah tentang takdir dan keberanian."></textarea>
+<label for="theme">Warna cover</label><select id="theme"><option value="night">Biru malam & emas</option><option value="rose">Merah mawar</option><option value="forest">Hijau hutan</option><option value="violet">Ungu misterius</option><option value="paper">Krem klasik</option></select>
+<div class="btns"><button id="update">Perbarui pratinjau</button><button class="secondary" id="download">Unduh cover PNG</button></div>
+<div class="status" id="status" aria-live="polite"></div>
+<p class="note">Versi gratis ini membuat desain grafis cover dari teks dan ornamen. Pembuatan gambar ilustrasi dengan AI belum diaktifkan, sehingga tidak membutuhkan API atau kredit berbayar.</p>
+</section>
+<section class="panel"><h2>Pratinjau cover</h2><div class="preview-wrap"><canvas id="cover" width="900" height="1350" aria-label="Pratinjau cover novel"></canvas></div><p class="note">Ukuran hasil: 900 × 1350 piksel (rasio 2:3), cocok sebagai rancangan awal cover e-book.</p></section>
+</main>
+<script>
+const $=id=>document.getElementById(id), c=$('cover'), ctx=c.getContext('2d');
+const themes={
+ night:{a:'#071a35',b:'#263c63',accent:'#f5d58a',orb:'#6ea5c9'},
+ rose:{a:'#350d25',b:'#9b3157',accent:'#ffe1c7',orb:'#f58a9b'},
+ forest:{a:'#071f1a',b:'#27634d',accent:'#e6d39a',orb:'#7fba91'},
+ violet:{a:'#170d35',b:'#5a3784',accent:'#e8d6ff',orb:'#a58ae0'},
+ paper:{a:'#ead9b8',b:'#a98a60',accent:'#38271c',orb:'#fff1d2'}
+};
+function wrap(text,maxWidth,font){ctx.font=font;let words=text.split(/\s+/),lines=[],line='';for(const word of words){let test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);return lines}
+function draw(){
+ const t=themes[$('theme').value];let g=ctx.createLinearGradient(0,0,900,1350);g.addColorStop(0,t.a);g.addColorStop(1,t.b);ctx.fillStyle=g;ctx.fillRect(0,0,900,1350);
+ // atmospheric glow and decorative rings
+ let glow=ctx.createRadialGradient(450,600,20,450,600,520);glow.addColorStop(0,t.orb+'aa');glow.addColorStop(1,t.orb+'00');ctx.fillStyle=glow;ctx.fillRect(0,0,900,1350);
+ ctx.strokeStyle=t.accent+'66';ctx.lineWidth=2;
+ for(let i=0;i<7;i++){ctx.beginPath();ctx.ellipse(450,650,140+i*48,210+i*48,-.25,0,Math.PI*2);ctx.stroke()}
+ // stylized central light / book emblem
+ ctx.save();ctx.translate(450,650);ctx.rotate(-.12);ctx.fillStyle=t.accent+'20';ctx.strokeStyle=t.accent;ctx.lineWidth=5;
+ ctx.beginPath();ctx.moveTo(0,-175);ctx.bezierCurveTo(120,-105,125,70,0,170);ctx.bezierCurveTo(-125,70,-120,-105,0,-175);ctx.closePath();ctx.fill();ctx.stroke();
+ ctx.beginPath();ctx.moveTo(0,-135);ctx.lineTo(0,130);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(-5,-65);ctx.quadraticCurveTo(-80,-115,-95,-40);ctx.quadraticCurveTo(-55,5,-5,12);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(5,30);ctx.quadraticCurveTo(75,-5,95,55);ctx.quadraticCurveTo(55,105,5,105);ctx.stroke();ctx.restore();
+ ctx.fillStyle=t.accent;ctx.textAlign='center';ctx.font='700 24px system-ui';ctx.fillText(($('genre').value||'NOVEL').toUpperCase(),450,95);
+ ctx.strokeStyle=t.accent;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(180,125);ctx.lineTo(720,125);ctx.stroke();
+ let title=$('title').value.trim()||'Judul Novel';let lines=wrap(title,730,'800 76px Georgia');let fs=76;if(lines.length>3){fs=58;lines=wrap(title,740,'800 58px Georgia')}ctx.font=`800 ${fs}px Georgia`;ctx.fillStyle='#ffffff';ctx.shadowColor='#0009';ctx.shadowBlur=12;
+ let start=245-(lines.length-1)*fs*.55;lines.forEach((line,i)=>ctx.fillText(line,450,start+i*fs*1.12));ctx.shadowBlur=0;
+ const tag=$('tagline').value.trim();if(tag){ctx.fillStyle=t.accent;let tl=wrap(tag,650,'italic 30px Georgia');tl.slice(0,3).forEach((line,i)=>{ctx.font='italic 30px Georgia';ctx.fillText(line,450,930+i*40)})}
+ ctx.strokeStyle=t.accent+'cc';ctx.lineWidth=3;ctx.strokeRect(42,42,816,1266);
+ ctx.fillStyle=t.accent;ctx.font='600 31px system-ui';ctx.fillText($('author').value.trim()||'Nama Penulis',450,1225);
+ ctx.font='20px system-ui';ctx.fillText('FADJAR COVER STUDIO',450,1270);
+}
+$('update').addEventListener('click',()=>{draw();$('status').textContent='Pratinjau berhasil diperbarui.'});
+['title','author','genre','tagline','theme'].forEach(id=>$(id).addEventListener('input',draw));
+$('download').addEventListener('click',()=>{draw();const a=document.createElement('a');a.download='fadjar-cover-studio.png';a.href=c.toDataURL('image/png');a.click();$('status').textContent='Cover PNG dibuat. Periksa folder Download di HP Anda.'});
+draw();
+</script>
+</body>
+</html>
